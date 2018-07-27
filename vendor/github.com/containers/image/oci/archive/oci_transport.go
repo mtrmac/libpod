@@ -16,6 +16,7 @@ import (
 	"github.com/containers/image/transports"
 	"github.com/containers/image/types"
 	"github.com/containers/storage/pkg/archive"
+	"github.com/containers/storage/pkg/idtools"
 	"github.com/pkg/errors"
 )
 
@@ -173,6 +174,28 @@ func createOCIRef(image string) (tempDirOCIRef, error) {
 	return tempDirRef, nil
 }
 
+// untarPath is archive.UntarPath == archive.Archiver.UntarPath, except that we set options.NoLchown.
+func untarPath(src, dst string) error {
+	archiver := archive.NewDefaultArchiver()
+
+	srcReader, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcReader.Close()
+	untarMappings := archiver.UntarIDMappings
+	if untarMappings == nil {
+		untarMappings = &idtools.IDMappings{}
+	}
+	options := &archive.TarOptions{
+		UIDMaps:   untarMappings.UIDs(),
+		GIDMaps:   untarMappings.GIDs(),
+		ChownOpts: archiver.ChownOpts,
+		NoLchown:  true,
+	}
+	return archiver.Untar(srcReader, dst, options)
+}
+
 // creates the temporary directory and copies the tarred content to it
 func createUntarTempDir(ref ociArchiveReference) (tempDirOCIRef, error) {
 	tempDirRef, err := createOCIRef(ref.image)
@@ -181,8 +204,9 @@ func createUntarTempDir(ref ociArchiveReference) (tempDirOCIRef, error) {
 	}
 	src := ref.resolvedFile
 	dst := tempDirRef.tempDirectory
+
 	// TODO: This can take quite some time, and should ideally be cancellable using a context.Context.
-	if err := archive.UntarPath(src, dst); err != nil {
+	if err := untarPath(src, dst); err != nil {
 		if err := tempDirRef.deleteTempDir(); err != nil {
 			return tempDirOCIRef{}, errors.Wrapf(err, "error deleting temp directory %q", tempDirRef.tempDirectory)
 		}
