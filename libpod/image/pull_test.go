@@ -226,12 +226,12 @@ func TestPullGoalFromImageReference(t *testing.T) {
 		// === docker:// (has ImageReference.DockerReference)
 		{ // Fully-specified input
 			"docker://docker.io/library/busybox:latest",
-			[]expected{{"docker://docker.io/library/busybox:latest", "docker.io/library/busybox:latest"}},
+			[]expected{{"docker://busybox:latest", "docker.io/library/busybox:latest"}},
 			false,
 		},
 		{ // Minimal form of the input
 			"docker://busybox",
-			[]expected{{"docker://busybox", "docker.io/library/busybox:latest"}},
+			[]expected{{"docker://busybox:latest", "docker.io/library/busybox:latest"}},
 			false,
 		},
 
@@ -243,7 +243,7 @@ func TestPullGoalFromImageReference(t *testing.T) {
 		srcRef, err := alltransports.ParseImageName(c.srcName)
 		require.NoError(t, err, c.srcName)
 
-		res, err := ir.pullGoalFromImageReference(context.Background(), srcRef, c.srcName, nil)
+		res, err := ir.pullGoalFromImageReference(context.Background(), srcRef, nil)
 		if len(c.expected) == 0 {
 			assert.Error(t, err, c.srcName)
 		} else {

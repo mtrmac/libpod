@@ -106,7 +106,7 @@ func (ir *Runtime) getSinglePullRefPairGoal(srcRef types.ImageReference, destNam
 }
 
 // pullGoalFromImageReference returns a pull goal for a single ImageReference, depending on the used transport.
-func (ir *Runtime) pullGoalFromImageReference(ctx context.Context, srcRef types.ImageReference, imgName string, sc *types.SystemContext) (*pullGoal, error) {
+func (ir *Runtime) pullGoalFromImageReference(ctx context.Context, srcRef types.ImageReference, sc *types.SystemContext) (*pullGoal, error) {
 	// supports pulling from docker-archive, oci, and registries
 	switch srcRef.Transport().Name() {
 	case DockerArchive:
@@ -185,7 +185,7 @@ func (ir *Runtime) pullGoalFromImageReference(ctx context.Context, srcRef types.
 		return ir.getSinglePullRefPairGoal(srcRef, image)
 
 	default:
-		return ir.getSinglePullRefPairGoal(srcRef, imgName)
+		return ir.getSinglePullRefPairGoal(srcRef, transports.ImageName(srcRef))
 	}
 }
 
@@ -202,7 +202,7 @@ func (ir *Runtime) pullImageFromHeuristicSource(ctx context.Context, inputName s
 			return nil, errors.Wrap(err, "error getting default registries to try")
 		}
 	} else {
-		goal, err = ir.pullGoalFromImageReference(ctx, srcRef, inputName, sc)
+		goal, err = ir.pullGoalFromImageReference(ctx, srcRef, sc)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error determining pull goal for image %q", inputName)
 		}
@@ -213,7 +213,7 @@ func (ir *Runtime) pullImageFromHeuristicSource(ctx context.Context, inputName s
 // pullImageFromReference pulls an image from a types.imageReference.
 func (ir *Runtime) pullImageFromReference(ctx context.Context, srcRef types.ImageReference, writer io.Writer, authfile, signaturePolicyPath string, signingOptions SigningOptions, dockerOptions *DockerRegistryOptions) ([]string, error) {
 	sc := GetSystemContext(signaturePolicyPath, authfile, false)
-	goal, err := ir.pullGoalFromImageReference(ctx, srcRef, transports.ImageName(srcRef), sc)
+	goal, err := ir.pullGoalFromImageReference(ctx, srcRef, sc)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error determining pull goal for image %q", transports.ImageName(srcRef))
 	}
