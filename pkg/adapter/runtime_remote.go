@@ -874,7 +874,7 @@ func (r *LocalRuntime) LoadImage(ctx context.Context, name string, cli *cliconfi
 	var names string
 	remoteTempFile, err := r.SendFileOverVarlink(cli.Input)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	more := varlink.More
 	if cli.Quiet {
