@@ -3,6 +3,7 @@
 package integration
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/pem"
 	"net/http"
@@ -127,6 +128,37 @@ RUN echo hello`
 			Expect(err).ToNot(HaveOccurred())
 			// Build context from https URL: no --cert-dir, so we get cert error for our self-signed server.
 			podmanFailTLSDetailsNoCA(&e, "build", "--pull-never", "-f", containerfilePath, "https://"+e.server.hostPort+"/context")
+		}
+	})
+
+	It("podman --tls-details build with FROM docker://", func() {
+		caDir := GinkgoT().TempDir()
+		caPath := filepath.Join(caDir, "ca.crt")
+
+		containerfile := `FROM docker://PLACEHOLDER/repo
+RUN true`
+		containerfilePath := filepath.Join(GinkgoT().TempDir(), "Containerfile")
+
+		for _, e := range expected {
+			err := os.WriteFile(caPath, e.server.certBytes, 0o644)
+			Expect(err).ToNot(HaveOccurred())
+			content := []byte(containerfile)
+			content = bytes.ReplaceAll(content, []byte("PLACEHOLDER"), []byte(e.server.hostPort))
+			err = os.WriteFile(containerfilePath, content, 0o644)
+			Expect(err).ToNot(HaveOccurred())
+			podmanFailTLSDetails(&e, "build", "--pull-always", "--cert-dir", caDir, "-f", containerfilePath, GinkgoT().TempDir())
+		}
+	})
+
+	It("podman --tls-details load", func() {
+		caDir := GinkgoT().TempDir()
+		caPath := filepath.Join(caDir, "ca.crt")
+
+		for _, e := range expected {
+			err := os.WriteFile(caPath, e.server.certBytes, 0o644)
+			Expect(err).ToNot(HaveOccurred())
+			// load from https URL: no --cert-dir, so we get cert error for our self-signed server.
+			podmanFailTLSDetailsNoCA(&e, "load", "-i", "https://"+e.server.hostPort+"/archive")
 		}
 	})
 
