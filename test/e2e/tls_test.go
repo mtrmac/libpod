@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 
 	. "github.com/containers/podman/v6/test/utils"
 	. "github.com/onsi/ginkgo/v2"
@@ -158,6 +159,42 @@ RUN true`
 		Skip("IMPOSSIBLE: kube apply connects to Kubernetes API server from kubeconfig. " +
 			"TLS is for the K8s API endpoint, not a container registry. " +
 			"Would require a full fake K8s API server speaking the K8s protocol.")
+	})
+
+	It("podman --tls-details kube play", func() {
+		caDir := GinkgoT().TempDir()
+		caPath := filepath.Join(caDir, "ca.crt")
+
+		kubeYamlTmpl := `apiVersion: v1
+kind: Pod
+metadata:
+  name: tls-test-pod-UNIQUE
+spec:
+  containers:
+    - name: test
+      image: IMAGE/repo
+      command: ["true"]
+`
+		kubeDir := GinkgoT().TempDir()
+
+		for i, e := range expected {
+			err := os.WriteFile(caPath, e.server.certBytes, 0o644)
+			Expect(err).ToNot(HaveOccurred())
+			content := bytes.ReplaceAll([]byte(kubeYamlTmpl), []byte("IMAGE"), []byte(e.server.hostPort))
+			content = bytes.ReplaceAll(content, []byte("UNIQUE"), []byte(strconv.Itoa(i)))
+			kubePath := filepath.Join(kubeDir, "pod-"+strconv.Itoa(i)+".yaml")
+			err = os.WriteFile(kubePath, content, 0o644)
+			Expect(err).ToNot(HaveOccurred())
+			// With --cert-dir, TLS succeeds and registry returns 418.
+			podmanFailTLSDetails(&e, "kube", "play", "--cert-dir", caDir, kubePath)
+		}
+	})
+
+	// Stub: --tls-details for kube play --build (4fce3184fd)
+	// COVERED: kube play --build uses --tls-details when building. Build path is in build tests.
+	It("podman --tls-details kube play --build (stub: covered by build tests)", func() {
+		Skip("kube play --build --tls-details exercised by build tests. " +
+			"Full test would need kube yaml + Containerfile with FROM docker://.")
 	})
 
 	It("podman --tls-details load", func() {
