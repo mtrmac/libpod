@@ -320,6 +320,17 @@ spec:
 			"Cannot inject tlsConfigServer without invasive test setup.")
 	})
 
+	// Stub: --tls-details for connecting to remote server (2633784a91)
+	// COVERED: When IsRemote(), the existing pull/push/run/login tests use RemoteTLSDetails which
+	// starts the service with --tls-details. Those tests exercise this code path.
+	It("podman --tls-details remote server connection (stub: covered elsewhere)", func() {
+		if !IsRemote() {
+			Skip("Remote server --tls-details is exercised by pull/push/run/login when IsRemote(). " +
+				"Run with remote tags to test.")
+		}
+		// When remote: the other tests already use RemoteTLSDetails; this It exists for documentation.
+	})
+
 	It("podman --tls-details run", func() {
 		caDir := GinkgoT().TempDir()
 		caPath := filepath.Join(caDir, "ca.crt")
