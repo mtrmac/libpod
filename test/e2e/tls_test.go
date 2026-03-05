@@ -357,6 +357,18 @@ spec:
 			"command, invoked by podman as transport. Would need: running TLS service, " +
 			"configuring URI, invoking in transport context—not feasible in e2e.")
 	})
+
+	// Stub: --tls-details for podman system service (5e6f5362a7)
+	// IMPOSSIBLE: Affects the server socket when accepting connections. Would require starting
+	// podman system service with --tls-details and our tlsConfigServer certs, then having a
+	// client connect and verify TLS algorithm negotiation. The remote test infrastructure uses
+	// --tls-cert/--tls-key and does not exercise --tls-details algorithm selection.
+	It("podman --tls-details system service (stub: impossible)", func() {
+		Skip("IMPOSSIBLE: system service --tls-details affects server-side TLS when accepting connections. " +
+			"Testing requires: (1) start podman system service with --tls-details and tlsConfigServer certs, " +
+			"(2) client connects and verifies TLS version/cipher negotiation. " +
+			"Remote test infra uses --tls-cert/--tls-key, not --tls-details algorithm selection.")
+	})
 })
 
 type expectedBehavior struct {
