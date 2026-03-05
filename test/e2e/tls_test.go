@@ -263,6 +263,15 @@ spec:
 		}
 	})
 
+	// Stub: --tls-details for pulling machine images (cdd6900d28)
+	// IMPOSSIBLE: Machine image pulls use OCI/disk formats and VM-specific URLs, not docker://
+	// registry protocol. The pull path is in pkg/machine and uses different transports.
+	It("podman --tls-details machine image pull (stub: impossible)", func() {
+		Skip("IMPOSSIBLE: machine image pulls use OCI/disk formats and VM-specific transports, " +
+			"not docker:// registry. Would require a machine-image server compatible with " +
+			"pkg/machine/ocipull and stdpull, not our HTTP-teapot tlsConfigServer.")
+	})
+
 	It("podman --tls-details pull", func() {
 		caDir := GinkgoT().TempDir()
 		caPath := filepath.Join(caDir, "ca.crt")
