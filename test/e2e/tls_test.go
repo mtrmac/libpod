@@ -210,6 +210,18 @@ var _ = Describe("--tls-details", func() {
 			}
 		}
 	})
+
+	It("podman --tls-details load", func() {
+		caDir := GinkgoT().TempDir()
+		caPath := filepath.Join(caDir, "ca.crt")
+
+		for _, e := range expected {
+			err := os.WriteFile(caPath, e.server.certBytes, 0o644)
+			Expect(err).ToNot(HaveOccurred())
+			// load from https URL: no --cert-dir, so we get cert error for our self-signed server.
+			podmanFailTLSDetailsNoCA(&e, "load", "-i", "https://"+e.server.hostPort+"/archive")
+		}
+	})
 })
 
 type expectedBehavior struct {
