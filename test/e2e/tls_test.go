@@ -150,6 +150,16 @@ RUN true`
 		}
 	})
 
+	// Stub: --tls-details for podman kube apply (e7ab40136e)
+	// IMPOSSIBLE: kube apply connects to a Kubernetes API server (from kubeconfig). The TLS is for
+	// the K8s API endpoint, not a container registry. Would require a fake K8s API server that
+	// speaks the full K8s protocol and accepts our TLS config—far beyond tlsConfigServer.
+	It("podman --tls-details kube apply (stub: impossible)", func() {
+		Skip("IMPOSSIBLE: kube apply connects to Kubernetes API server from kubeconfig. " +
+			"TLS is for the K8s API endpoint, not a container registry. " +
+			"Would require a full fake K8s API server speaking the K8s protocol.")
+	})
+
 	It("podman --tls-details load", func() {
 		caDir := GinkgoT().TempDir()
 		caPath := filepath.Join(caDir, "ca.crt")
