@@ -272,6 +272,15 @@ spec:
 			"pkg/machine/ocipull and stdpull, not our HTTP-teapot tlsConfigServer.")
 	})
 
+	// Stub: --tls-details for machine os upgrade (e4febc45bd)
+	// IMPOSSIBLE: machine os upgrade fetches OS images from machine-specific URLs (ostree, etc.).
+	// Requires a running VM, machine-specific infrastructure, and non-docker:// image format.
+	It("podman --tls-details machine os upgrade (stub: impossible)", func() {
+		Skip("IMPOSSIBLE: machine os upgrade fetches OS images from machine-specific URLs. " +
+			"Requires running VM, machine infra, and non-docker:// format. " +
+			"tlsConfigServer cannot emulate ostree/machine image servers.")
+	})
+
 	It("podman --tls-details pull", func() {
 		caDir := GinkgoT().TempDir()
 		caPath := filepath.Join(caDir, "ca.crt")
