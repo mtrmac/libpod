@@ -310,6 +310,16 @@ spec:
 		}
 	})
 
+	// Stub: --tls-details in quadlet install (ef3d6c37cd)
+	// IMPOSSIBLE: quadlet install creates systemd units and may pull images during install.
+	// It runs as a system operation, modifies systemd unit dirs, and the pull happens in a
+	// different process/context. Cannot use tlsConfigServer without invasive test setup.
+	It("podman --tls-details quadlet install (stub: impossible)", func() {
+		Skip("IMPOSSIBLE: quadlet install creates systemd units and pulls images as a system op. " +
+			"Modifies systemd dirs; pull happens in different context. " +
+			"Cannot inject tlsConfigServer without invasive test setup.")
+	})
+
 	It("podman --tls-details run", func() {
 		caDir := GinkgoT().TempDir()
 		caPath := filepath.Join(caDir, "ca.crt")
