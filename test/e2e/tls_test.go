@@ -112,6 +112,24 @@ var _ = Describe("--tls-details", func() {
 
 	// FIXME: this should contain many more tests to exercise libimage.Runtime.{SystemContext,imageContext,LibimageRuntime}.
 
+	It("podman --tls-details build from URL context", func() {
+		caDir := GinkgoT().TempDir()
+		caPath := filepath.Join(caDir, "ca.crt")
+
+		containerfile := `FROM quay.io/libpod/alpine:latest
+RUN echo hello`
+		containerfilePath := filepath.Join(GinkgoT().TempDir(), "Containerfile")
+		err := os.WriteFile(containerfilePath, []byte(containerfile), 0o644)
+		Expect(err).ToNot(HaveOccurred())
+
+		for _, e := range expected {
+			err := os.WriteFile(caPath, e.server.certBytes, 0o644)
+			Expect(err).ToNot(HaveOccurred())
+			// Build context from https URL: no --cert-dir, so we get cert error for our self-signed server.
+			podmanFailTLSDetailsNoCA(&e, "build", "--pull-never", "-f", containerfilePath, "https://"+e.server.hostPort+"/context")
+		}
+	})
+
 	It("podman --tls-details login", func() {
 		caDir := GinkgoT().TempDir()
 		caPath := filepath.Join(caDir, "ca.crt")
