@@ -1203,6 +1203,26 @@ func readAllLayerStores[T any](s *store, fn func(store roLayerStore) (T, bool, e
 	return zeroRes, false, nil
 }
 
+// readPrimaryLayerStore is a helper for working with store.getLayerStore():
+// It locks the store for reading, checks for updates, and calls fn()
+// It returns the return value of fn, or its own error initializing the store.
+//
+// Most callers should call readAllLayerStores instead.
+func readPrimaryLayerStore[T any](s *store, fn func(store rwLayerStore) (T, error)) (T, error) {
+	var zeroRes T // A zero value of T
+
+	store, err := s.getLayerStore()
+	if err != nil {
+		return zeroRes, err
+	}
+
+	if err := store.startReading(); err != nil {
+		return zeroRes, err
+	}
+	defer store.stopReading()
+	return fn(store)
+}
+
 // writeToLayerStore is a helper for working with store.getLayerStore():
 // It locks the store for writing, checks for updates, and calls fn()
 // It returns the return value of fn, or its own error initializing the store.
