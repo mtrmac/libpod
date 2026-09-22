@@ -808,6 +808,8 @@ type InspectContainerData struct {
 	Namespace               string                      `json:"Namespace"`
 	IsInfra                 bool                        `json:"IsInfra"`
 	IsService               bool                        `json:"IsService"`
+	IsInitCtr               bool                        `json:"IsInitCtr"`
+	InitContainerType       string                      `json:"InitContainerType,omitempty"`
 	KubeExitCodePropagation string                      `json:"KubeExitCodePropagation"`
 	LockNumber              uint32                      `json:"lockNumber"`
 	Config                  *InspectContainerConfig     `json:"Config"`
