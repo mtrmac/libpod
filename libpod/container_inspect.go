@@ -168,6 +168,8 @@ func (c *Container) getContainerInspectData(size bool, driverData *define.Driver
 		Dependencies:            c.Dependencies(),
 		IsInfra:                 c.IsInfra(),
 		IsService:               c.IsService(),
+		IsInitCtr:               c.IsInitCtr(),
+		InitContainerType:       c.config.InitContainerType,
 		KubeExitCodePropagation: config.KubeExitCodePropagation.String(),
 		LockNumber:              c.lock.ID(),
 		UseImageHosts:           c.config.UseImageHosts,
