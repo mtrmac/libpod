@@ -864,7 +864,8 @@ func UpdateContainer(w http.ResponseWriter, r *http.Request) {
 		if resources.Pids == nil {
 			resources.Pids = new(spec.LinuxPids)
 		}
-		resources.Pids.Limit = options.PidsLimit
+		limit := specgenutil.PidsLimitForOCI(*options.PidsLimit)
+		resources.Pids.Limit = &limit
 	}
 
 	// Blkio Weight
