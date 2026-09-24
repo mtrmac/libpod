@@ -321,6 +321,16 @@ func currentLabelOpts() ([]string, error) {
 	}, nil
 }
 
+// CutSecurityOpt splits a security option into key and value.
+// Docker deprecated the ":" separator but still supports it, so we
+// need to as well.
+func CutSecurityOpt(opt string) (key, val string, hasVal bool) {
+	if strings.Contains(opt, "=") {
+		return strings.Cut(opt, "=")
+	}
+	return strings.Cut(opt, ":")
+}
+
 func FillOutSpecGen(s *specgen.SpecGenerator, c *entities.ContainerCreateOptions, args []string) error {
 	rtc, err := config.Default()
 	if err != nil {
@@ -736,15 +746,7 @@ func FillOutSpecGen(s *specgen.SpecGenerator, c *entities.ContainerCreateOptions
 	}
 
 	for _, opt := range c.SecurityOpt {
-		// Docker deprecated the ":" syntax but still supports it,
-		// so we need to as well
-		var key, val string
-		var hasVal bool
-		if strings.Contains(opt, "=") {
-			key, val, hasVal = strings.Cut(opt, "=")
-		} else {
-			key, val, hasVal = strings.Cut(opt, ":")
-		}
+		key, val, hasVal := CutSecurityOpt(opt)
 		if !hasVal &&
 			key != "no-new-privileges" {
 			return fmt.Errorf("invalid --security-opt 1: %q", opt)
