@@ -945,6 +945,46 @@ BOGUS=foo
 		Expect(matches).To(BeEmpty())
 	})
 
+	It("Should load drop-ins for symlinked template unit files", func() {
+		// External directory simulating /etc/containers/systemd
+		externalDir := filepath.Join(podmanTest.TempDir, "external")
+		Expect(os.MkdirAll(externalDir, os.ModePerm)).To(Succeed())
+
+		// Template unit file in external dir
+		templateContent := "[Container]\nImage=localhost/imagename\n\n[Install]\nWantedBy=default.target\n"
+		Expect(os.WriteFile(filepath.Join(externalDir, "test@.container"), []byte(templateContent), 0o644)).To(Succeed())
+
+		// Drop-in directory in external dir
+		dropinDir := filepath.Join(externalDir, "test@.container.d")
+		Expect(os.MkdirAll(dropinDir, os.ModePerm)).To(Succeed())
+		dropinContent := "[Container]\nEnvironment=TEST_ENV=from_dropin\n"
+		Expect(os.WriteFile(filepath.Join(dropinDir, "10-override.conf"), []byte(dropinContent), 0o644)).To(Succeed())
+
+		// Symlink template unit into user quadletDir
+		Expect(os.Symlink(filepath.Join(externalDir, "test@.container"), filepath.Join(quadletDir, "test@.container"))).To(Succeed())
+
+		var args []string
+		if isRootless() {
+			args = append(args, "--user")
+		}
+		args = append(args, "--no-kmsg-log", generatedDir)
+		session := podmanTest.Quadlet(args, quadletDir)
+		session.WaitWithDefaultTimeout()
+		Expect(session).Should(Exit(0))
+
+		generatedService := filepath.Join(generatedDir, "test@.service")
+		unit, err := parser.ParseUnitFile(generatedService)
+		Expect(err).ToNot(HaveOccurred())
+
+		env, ok := unit.Lookup("X-Container", "Environment")
+		Expect(ok).To(BeTrue())
+		Expect(env).To(Equal("TEST_ENV=from_dropin"))
+
+		execStart, ok := unit.Lookup("Service", "ExecStart")
+		Expect(ok).To(BeTrue())
+		Expect(execStart).To(ContainSubstring("--env TEST_ENV=from_dropin"))
+	})
+
 	DescribeTable("Running success quadlet test case",
 		runSuccessQuadletTestCase,
 		Entry("Basic container", "basic.container"),
